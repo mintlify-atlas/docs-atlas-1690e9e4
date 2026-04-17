@@ -1,0 +1,119 @@
+---
+title: "Profile info and geolocation: info and addrs commands"
+description: "The info command retrieves full Instagram profile details. The addrs command extracts and reverse-geocodes GPS locations from geotagged posts."
+---
+
+Two commands cover the foundational reconnaissance steps against any public Instagram account: `info` pulls the full profile record in a single call, while `addrs` fetches every post, extracts embedded GPS coordinates, and converts them to readable addresses using the Nominatim geocoder.
+
+## `info`
+
+Prints a detailed profile record for the current target. The data is fetched from Instagram's private `full_detail_info` endpoint and covers both basic identity fields and business-account attributes when present.
+
+### Fields returned
+
+| Field | Notes |
+|---|---|
+| `ID` | Instagram internal numeric user ID (`pk`) |
+| `FULL NAME` | Display name |
+| `BIOGRAPHY` | Profile bio text |
+| `FOLLOWED` | Follower count |
+| `FOLLOW` | Following count |
+| `BUSINESS ACCOUNT` | `True` or `False` |
+| `BUSINESS CATEGORY` | Only shown when the account is a business and the category is not hidden |
+| `VERIFIED ACCOUNT` | `True` or `False` |
+| `EMAIL` | Public email address, if the user has set one |
+| `HD PROFILE PIC` | Direct URL to the high-resolution profile picture |
+| `FB PAGE` | Connected Facebook page, if linked |
+| `WHATSAPP NUMBER` | WhatsApp number, if set on the profile |
+| `CITY` | City name from the business address, if set |
+| `ADDRESS STREET` | Street address, if set |
+| `CONTACT PHONE NUMBER` | Public contact phone number, if set |
+
+Conditional fields (email, FB page, WhatsApp number, city, street address, contact phone) are only printed when they are present and non-empty in the API response.
+
+### Example output
+
+```text
+Run a command: info
+
+[ID] 12345678901
+[FULL NAME] Jane Smith
+[BIOGRAPHY] Photographer based in NYC. Booking: jane@example.com
+[FOLLOWED] 48200
+[FOLLOW] 612
+[BUSINESS ACCOUNT] True
+[BUSINESS CATEGORY] Photography
+[VERIFIED ACCOUNT] False
+[EMAIL] jane@example.com
+[HD PROFILE PIC] https://instagram.fxxx1-1.fna.fbcdn.net/v/...
+[CITY] New York
+[CONTACT PHONE NUMBER] +1 212 555 0100
+```
+
+### Saving output
+
+Enable JSON export before running the command to write profile data to a structured file:
+
+```text
+Run a command: JSON=y
+Run a command: info
+```
+
+The JSON file is saved to `output/<target>/<target>_info.json` and includes all fields that were present in the response.
+
+---
+
+## `addrs`
+
+Iterates over all posts in the target's feed, extracts latitude and longitude from any post that has a location tag, then reverse-geocodes each coordinate pair to a street address using the `geopy` Nominatim geocoder. Results are sorted from most recent to oldest by post timestamp and displayed as a table.
+
+<Note>
+`addrs` only returns results for posts that have an explicit GPS location attached. Posts without a location tag are silently skipped. Accounts that rarely geotag their posts will return few or no results.
+</Note>
+
+### How it works
+
+<Steps>
+  <Step title="Fetch the full feed">
+    The tool pages through all of the target's posts using the Instagram private API until no `next_max_id` cursor is returned.
+  </Step>
+  <Step title="Extract coordinates">
+    Each post's `location` field is checked for `lat` and `lng` values. Unique coordinate pairs are collected; if two posts share identical coordinates, only one geocoding request is made.
+  </Step>
+  <Step title="Reverse-geocode">
+    Each coordinate pair is sent to the Nominatim geocoder, which returns a human-readable address string.
+  </Step>
+  <Step title="Sort and display">
+    Addresses are sorted by post timestamp in descending order (most recent first) and printed as a table with `Post`, `Address`, and `Time` columns.
+  </Step>
+</Steps>
+
+### Output format
+
+```text
+Run a command: addrs
+Searching for target localizations...
+
+Woohoo! We found 3 addresses
+
++------+---------------------------------------------------+---------------------+
+| Post | Address                                           | Time                |
++------+---------------------------------------------------+---------------------+
+| 1    | 350 5th Ave, New York, NY 10118, United States    | 2024-11-03 14:22:10 |
+| 2    | 1 Infinite Loop, Cupertino, CA 95014, United States | 2024-09-17 09:45:33 |
+| 3    | Via della Conciliazione, 00120 Vatican City        | 2024-07-04 18:01:55 |
++------+---------------------------------------------------+---------------------+
+```
+
+When `FILE=y` is set, output is saved to `output/<target>/<target>_addrs.txt`. With `JSON=y`, each address and timestamp are written as objects in `output/<target>/<target>_addrs.json`:
+
+```json
+{
+  "address": [
+    {
+      "address": "350 5th Ave, New York, NY 10118, United States",
+      "time": "2024-11-03 14:22:10"
+    }
+  ]
+}
+```

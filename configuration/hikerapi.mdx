@@ -1,0 +1,84 @@
+---
+title: "Configure HikerAPI as an alternative Osintgram backend"
+description: "HikerAPI is an alternative backend to the Instagram private API. Use a token from hikerapi.com for more stable, rate-limit-friendly access."
+---
+
+Osintgram supports two backends for fetching Instagram data. The default backend uses the `instagram_private_api` library, which authenticates directly with Instagram using your credentials. As an alternative, you can configure a HikerAPI token and Osintgram will use the `HikerCLI` class instead, routing all requests through HikerAPI's servers.
+
+## Why use HikerAPI
+
+The Instagram private API is prone to rate limiting, session challenges, and account restrictions when queried aggressively. HikerAPI acts as a proxy layer that manages its own Instagram sessions, reducing the likelihood of your account being flagged or blocked mid-session.
+
+Key differences when using HikerAPI:
+
+- No `config/settings.json` session cache is created — authentication is handled by HikerAPI
+- The `challenge_required` flow is handled on HikerAPI's side, not locally
+- `clear_cache` has no effect (HikerAPI does not maintain a local cookie store)
+
+## Get a HikerAPI token
+
+<Steps>
+  <Step title="Register at hikerapi.com">
+    Create an account at [https://hikerapi.com](https://hikerapi.com). Registration requires confirmation via Telegram.
+  </Step>
+  <Step title="Get your token">
+    Visit [https://hikerapi.com/tokens](https://hikerapi.com/tokens) to generate an access token. The first 100 requests are free after registration.
+  </Step>
+  <Step title="Copy the token">
+    Copy the token string — you will use it in one of the two configuration methods below.
+  </Step>
+</Steps>
+
+## Configure the token
+
+<Tabs>
+  <Tab title="credentials.ini">
+    Add your token to the `hikerapi_token` field in `config/credentials.ini`:
+
+    ```ini config/credentials.ini
+    [Credentials]
+    username =
+    password =
+    hikerapi_token = your_token_here
+    ```
+
+    When `hikerapi_token` is set here, the `username` and `password` fields are not used — you can leave them blank.
+  </Tab>
+  <Tab title="Environment variable">
+    Pass the token as the `HIKERAPI_TOKEN` environment variable at launch time. This avoids storing the token in the config file:
+
+    ```bash
+    HIKERAPI_TOKEN=your_token_here python3 main.py <target_username>
+    ```
+
+    You can also combine it with other flags:
+
+    ```bash
+    HIKERAPI_TOKEN=your_token_here python3 main.py <target_username> -c followers
+    ```
+  </Tab>
+</Tabs>
+
+## How backend selection works
+
+When Osintgram starts, `src/config.py` resolves the token with `getHikerToken()`:
+
+```python src/config.py
+def getHikerToken():
+    return config["Credentials"].get("hikerapi_token") or os.getenv("HIKERAPI_TOKEN")
+```
+
+The credentials file is checked first; the environment variable is the fallback. If either returns a non-empty value, `main.py` instantiates `HikerCLI` instead of `Osintgram`:
+
+```python main.py
+if config.getHikerToken():
+    api = HikerCLI(args.id, args.file, args.json, args.command, args.output, args.cookies)
+else:
+    api = Osintgram(args.id, args.file, args.json, args.command, args.output, args.cookies)
+```
+
+If `getHikerToken()` returns `None` or an empty string, the default Instagram private API backend is used and `username` / `password` are required.
+
+<Info>
+  Both `HikerCLI` and `Osintgram` expose the same command interface, so all interactive commands (`followers`, `hashtags`, `info`, etc.) and CLI flags work identically regardless of which backend is active.
+</Info>

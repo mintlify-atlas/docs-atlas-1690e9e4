@@ -1,0 +1,122 @@
+---
+title: "Download photos, profile pictures, and stories files"
+description: "The photos, propic, and stories commands download media from a target's Instagram account to the local output directory as JPG and MP4 files."
+---
+
+Three commands download media files from a target's account to your local filesystem. All files are saved under `output/<target>/` by default. You can change the output root directory by passing `-o` or `--output` when starting Osintgram:
+
+```bash
+python3 main.py <target> --output /path/to/custom/dir
+```
+
+## `photos`
+
+Downloads photos from the target's feed. When run interactively, the command prompts for how many photos to download. Press Enter (or type nothing) to download everything available. Type a number to limit the download count.
+
+Carousel posts (posts containing multiple images) are fully handled: each image in the carousel is downloaded individually and counts toward the limit.
+
+<Note>
+When run in non-interactive mode with `-c photos`, the prompt is skipped and all available photos are downloaded without asking.
+</Note>
+
+### Interactive prompt
+
+```text
+Run a command: photos
+How many photos you want to download (default all):
+```
+
+- Press Enter to download all photos.
+- Enter a number (e.g. `20`) to download that many photos.
+
+### File naming
+
+Each photo is saved as:
+
+```text
+output/<target>/<target>_<post_id>.jpg
+```
+
+For example, for a target `janesmith` with post ID `3012345678901234567`:
+
+```text
+output/janesmith/janesmith_3012345678901234567.jpg
+```
+
+### Example session
+
+```text
+Run a command: photos
+How many photos you want to download (default all): 10
+Downloading 10 photos...
+Downloaded 10 photos
+Woohoo! We downloaded 10 medias (saved in output/janesmith folder)
+```
+
+---
+
+## `propic`
+
+Downloads the target's profile picture at the highest available resolution. The command first attempts to retrieve the `hd_profile_pic_url_info` URL; if that field is absent, it falls back to the highest-resolution entry in `hd_profile_pic_versions`.
+
+The file is saved as:
+
+```text
+output/<target>/<target>_propic.jpg
+```
+
+`propic` does not check for a private profile — it works for any account that has a profile picture set.
+
+### Example session
+
+```text
+Run a command: propic
+Target propic saved in output folder
+```
+
+---
+
+## `stories`
+
+Downloads all active stories from the target's account. Photos are saved as `.jpg` and videos (including GIFs stored as video) are saved as `.mp4`. If the target has no active stories, the command reports no results found.
+
+### File naming
+
+Stories are saved as:
+
+```text
+output/<target>/<target>_<story_id>.jpg   # photo story
+output/<target>/<target>_<story_id>.mp4   # video story
+```
+
+### Example session
+
+```text
+Run a command: stories
+Searching for target stories...
+5 target stories saved in output folder
+```
+
+If there are no active stories:
+
+```text
+Run a command: stories
+Searching for target stories...
+Sorry! No results found :-(
+```
+
+---
+
+## Output directory structure
+
+After running all three download commands against a target `janesmith`, the output directory looks like this:
+
+```text
+output/
+└── janesmith/
+    ├── janesmith_3012345678901234567.jpg
+    ├── janesmith_2987654321098765432.jpg
+    ├── janesmith_propic.jpg
+    ├── janesmith_3198765432109876543.jpg   # photo story
+    └── janesmith_3198765432109876544.mp4   # video story
+```

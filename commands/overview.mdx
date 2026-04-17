@@ -1,0 +1,88 @@
+---
+title: "All Osintgram commands: interactive shell reference"
+description: "Complete index of all Osintgram interactive shell commands, organized by category — profile data, social graph, content, contact info, and downloads."
+---
+
+Osintgram launches an interactive shell that accepts commands at the `Run a command:` prompt. Every command targets the username you pass when starting the tool, and results print directly to the terminal. You can optionally save output to text files or export it to JSON files without leaving the session.
+
+## Running commands
+
+Type any command at the prompt and press Enter:
+
+```bash
+Run a command: info
+```
+
+To run a single command without entering the interactive shell, pass it with `-c` or `--command`:
+
+```bash
+python3 main.py <target> --command info
+python3 main.py <target> -c followers
+```
+
+In non-interactive (`-c`) mode, commands that normally ask how many results to retrieve (such as `photos`) skip the prompt and use the default behavior (all results).
+
+## Session controls
+
+These controls are available at any time during an interactive session:
+
+| Control | Description |
+|---|---|
+| `list` or `help` | Print all available commands with one-line descriptions |
+| `quit` or `exit` | End the session |
+| `FILE=y` | Enable saving all subsequent command output to `output/<target>/<target>_<command>.txt` |
+| `FILE=n` | Disable file output |
+| `JSON=y` | Enable exporting all subsequent command output to `output/<target>/<target>_<command>.json` |
+| `JSON=n` | Disable JSON export |
+| `target` | Switch to a different Instagram username without restarting |
+| `cache` | Clear the local authentication cache (`config/settings.json`) |
+
+<Tip>
+Tab completion is enabled in the interactive shell. Press Tab to autocomplete any command name.
+</Tip>
+
+## Command categories
+
+<CardGroup cols={2}>
+  <Card title="Profile info" icon="user" href="/commands/profile-info">
+    `info` and `addrs` — retrieve full account details and reverse-geocode geotagged post locations.
+  </Card>
+  <Card title="Social graph" icon="users" href="/commands/social-graph">
+    `followers`, `followings`, `tagged`, `wcommented`, `wtagged` — map a target's social connections and engagement network.
+  </Card>
+  <Card title="Content analysis" icon="image" href="/commands/content">
+    `captions`, `comments`, `commentdata`, `hashtags`, `mediatype`, `photodes`, `likes` — analyze post text, engagement, and media.
+  </Card>
+  <Card title="Contact info" icon="phone" href="/commands/contact-info">
+    `fwersemail`, `fwingsemail`, `fwersnumber`, `fwingsnumber` — harvest public emails and phone numbers from follower and following lists.
+  </Card>
+  <Card title="Downloads" icon="download" href="/commands/download">
+    `photos`, `propic`, `stories` — download photos, profile pictures, and active stories to your local output directory.
+  </Card>
+</CardGroup>
+
+## All commands quick reference
+
+| Command | Category | Description |
+|---|---|---|
+| `addrs` | Profile info | Get all addresses registered in target's geotagged photos |
+| `captions` | Content | Get all captions from target's posts |
+| `commentdata` | Content | Get full comment data for all target posts |
+| `comments` | Content | Get total comment count across target's posts |
+| `followers` | Social graph | Get target's followers (ID, username, full name) |
+| `followings` | Social graph | Get accounts the target follows |
+| `fwersemail` | Contact info | Get public emails of target's followers |
+| `fwingsemail` | Contact info | Get public emails of accounts the target follows |
+| `fwersnumber` | Contact info | Get public phone numbers of target's followers |
+| `fwingsnumber` | Contact info | Get public phone numbers of accounts the target follows |
+| `hashtags` | Content | Get all hashtags used by target, sorted by frequency |
+| `info` | Profile info | Get full target profile details |
+| `likes` | Content | Get total like count with min, max, and average per post |
+| `mediatype` | Content | Count photos vs videos posted by target |
+| `photodes` | Content | Get AI-generated accessibility captions for target's photos |
+| `photos` | Downloads | Download target's photos to the output folder |
+| `propic` | Downloads | Download target's HD profile picture |
+| `stories` | Downloads | Download target's current active stories |
+| `tagged` | Social graph | Get users tagged by target in their own posts |
+| `wcommented` | Social graph | Get users who commented on target's posts, sorted by count |
+| `wtagged` | Social graph | Get users who tagged target in their posts, sorted by count |

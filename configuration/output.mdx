@@ -1,0 +1,135 @@
+---
+title: "Configure Osintgram output directories and formats"
+description: "Control where Osintgram saves results by setting FILE=y for text output and JSON=y for JSON export, or specifying a custom output directory."
+---
+
+By default Osintgram prints every command's results to the terminal only. You can instruct it to also persist results to disk — as plain text, as JSON, or both — and control the directory where those files land.
+
+## Output directory
+
+When Osintgram starts, it creates an output directory for the target automatically:
+
+```
+output/<target_username>/
+```
+
+For example, targeting `johndoe` produces:
+
+```
+output/
+└── johndoe/
+```
+
+The directory is created with `mkdir -p` so intermediate paths are always safe to create.
+
+### Override the output directory
+
+Use `--output` / `-o` to write files to a different path:
+
+```bash
+python3 main.py <target_username> --output /tmp/recon
+# or
+python3 main.py <target_username> -o /tmp/recon
+```
+
+The target subdirectory is still appended automatically, so the above would produce `/tmp/recon/<target_username>/`.
+
+## Enabling file output
+
+File and JSON output are disabled by default. There are two ways to enable them.
+
+### Interactive prompt (runtime toggle)
+
+Once the interactive shell is running, type the toggle commands at the `Run a command:` prompt:
+
+| Command | Effect |
+| --- | --- |
+| `FILE=y` | Enable saving results to `.txt` files |
+| `FILE=n` | Disable `.txt` file output |
+| `JSON=y` | Enable exporting results to `.json` files |
+| `JSON=n` | Disable `.json` file output |
+
+The shell confirms the change immediately:
+
+```
+Run a command: FILE=y
+Write to file: enabled
+
+Run a command: JSON=y
+Export to JSON: enabled
+```
+
+### CLI flags (enabled from startup)
+
+Pass flags when launching the tool to enable output before the interactive prompt appears:
+
+```bash
+# Enable .txt file output from the start
+python3 main.py <target_username> --file
+python3 main.py <target_username> -f
+
+# Enable .json export from the start
+python3 main.py <target_username> --json
+python3 main.py <target_username> -j
+
+# Enable both simultaneously
+python3 main.py <target_username> -f -j
+```
+
+These flags are equivalent to typing `FILE=y` and `JSON=y` at the interactive prompt but take effect before you run any commands.
+
+## Output file naming
+
+Every file Osintgram writes follows the pattern:
+
+```
+<target_username>_<command>.<ext>
+```
+
+where `<ext>` is `txt` for file output and `json` for JSON export. Files are written into `output/<target_username>/` (or whichever directory you specified with `-o`).
+
+### File names by command
+
+| Command | `.txt` file | `.json` file |
+| --- | --- | --- |
+| `addrs` | `<target>_addrs.txt` | `<target>_addrs.json` |
+| `captions` | `<target>_captions.txt` | `<target>_followings.json`* |
+| `commentdata` | `<target>_comment_data.txt` | `<target>_comment_data.json` |
+| `comments` | `<target>_comments.txt` | `<target>_comments.json` |
+| `followers` | `<target>_followers.txt` | `<target>_followers.json` |
+| `followings` | `<target>_followings.txt` | `<target>_followings.json` |
+| `fwersemail` | `<target>_fwersemail.txt` | `<target>_fwersemail.json` |
+| `fwingsemail` | `<target>_fwingsemail.txt` | `<target>_fwingsemail.json` |
+| `fwersnumber` | `<target>_fwersnumber.txt` | `<target>_fwersnumber.json` |
+| `fwingsnumber` | `<target>_fwingsnumber.txt` | `<target>_fwingsnumber.json` |
+| `hashtags` | `<target>_hashtags.txt` | `<target>_hashtags.json` |
+| `info` | — | `<target>_info.json` |
+| `likes` | `<target>_likes.txt` | `<target>_likes.json` |
+| `mediatype` | `<target>_mediatype.txt` | `<target>_mediatype.json` |
+| `photodes` | `<target>_photodes.txt` | `<target>_descriptions.json` |
+| `tagged` | `<target>_tagged.txt` | `<target>_tagged.json` |
+| `wcommented` | `<target>_users_who_commented.txt` | `<target>_users_who_commented.json` |
+| `wtagged` | `<target>_users_who_tagged.txt` | `<target>_users_who_tagged.json` |
+
+<Note>
+  \* The `captions` command writes its JSON output to `<target>_followings.json` — this is the name used in the source code.
+</Note>
+
+Photo and story downloads (`photos`, `propic`, `stories`) write image files directly into the output directory using the format `<target>_<media_id>.jpg` or `<target>_<media_id>.mp4`. They do not produce separate `.txt` or `.json` files.
+
+## Example session
+
+```bash
+python3 main.py johndoe -f -j
+```
+
+After running `followers` and `hashtags` in the interactive shell, the output directory contains:
+
+```
+output/
+└── johndoe/
+    ├── johndoe_followers.txt
+    ├── johndoe_followers.json
+    ├── johndoe_hashtags.txt
+    └── johndoe_hashtags.json
+```

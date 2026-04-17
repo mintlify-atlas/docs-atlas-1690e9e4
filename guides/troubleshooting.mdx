@@ -1,0 +1,200 @@
+---
+title: "Troubleshooting common Osintgram errors and issues"
+description: "Fix common Osintgram errors including challenge_required, ClientThrottledError, private profile blocks, and credential or dependency issues."
+---
+
+This page covers the errors most frequently encountered when running Osintgram and explains how to resolve each one. If your issue is not listed here, check the open issues on [GitHub](https://github.com/Datalux/Osintgram/issues).
+
+<Warning>
+Use a secondary Instagram account, not your primary one. Running automated requests against the API increases the risk of Instagram flagging and restricting the account used for authentication.
+</Warning>
+
+<AccordionGroup>
+  <Accordion title="challenge_required error">
+    Instagram detected suspicious login activity on the account used by Osintgram and requires a verification challenge before continuing.
+
+    **What to do:**
+
+    1. Look for a URL printed in the error output. It will look like `https://i.instagram.com/challenge/...`
+    2. Open that URL in a browser while logged in as the Osintgram account.
+    3. Complete the required action — entering a code sent by SMS or email, confirming your identity, and so on.
+    4. Once the challenge is cleared, run Osintgram again.
+
+    **Prevention tips:**
+
+    - Use a dedicated secondary account that you do not use for normal activity.
+    - Avoid running many commands in rapid succession against different targets.
+    - If the challenge recurs frequently, consider switching to the HikerAPI backend by setting `HIKERAPI_TOKEN` in `config/credentials.ini`.
+  </Accordion>
+
+  <Accordion title="ClientThrottledError — Instagram rate limit">
+    Instagram has temporarily blocked requests from the account because too many API calls were made in a short period.
+
+    The error is raised by the `instagram_private_api` library and looks like:
+
+    ```
+    ClientThrottledError: ...
+    ```
+
+    **What to do:**
+
+    1. Stop running commands and wait at least several minutes (10–15 is a reasonable starting point) before retrying.
+    2. Avoid looping commands in tight scripts without delays.
+    3. Consider switching to the HikerAPI backend for commands that iterate over large follower lists, such as `fwersemail` and `fwingsemail`, which make one API call per follower.
+
+    ```bash
+    HIKERAPI_TOKEN=<your_token> python3 main.py <target> -c fwersemail
+    ```
+  </Accordion>
+
+  <Accordion title="Private profile — cannot access data">
+    When a target has a private profile and you are not following them, Osintgram prints:
+
+    ```
+    Impossible to execute command: user has private profile
+    Do you want send a follow request? [Y/N]:
+    ```
+
+    **What to do:**
+
+    - Type `Y` to send a follow request from the Osintgram account. The target must accept before you can run data-gathering commands.
+    - Type `N` to cancel. You will not be able to retrieve any data until you follow the target.
+
+    Once the follow request is accepted, set the target again with the `target` command (or restart with the same username) so Osintgram re-checks the following status.
+
+    <Note>
+    There is no way to access private profile data without following the account. Tools claiming otherwise are not legitimate.
+    </Note>
+  </Accordion>
+
+  <Accordion title="Credentials file not found">
+    Osintgram reads login credentials from `config/credentials.ini`. If this file does not exist, you will see an error at startup.
+
+    **What to do:**
+
+    Run the interactive setup command from the repository root:
+
+    ```bash
+    make setup
+    ```
+
+    This creates `config/credentials.ini` with the following structure:
+
+    ```ini
+    [Credentials]
+    username = your_instagram_username
+    password = your_instagram_password
+    ```
+
+    To add a HikerAPI token instead of credentials, add this line:
+
+    ```ini
+    hikerapi_token = your_token_here
+    ```
+
+    Alternatively, create the file manually using the structure above.
+  </Accordion>
+
+  <Accordion title="Login failed / ClientError at startup">
+    If Osintgram starts but immediately raises a `ClientError` and prints `bad_password` or a similar message, the username or password in `config/credentials.ini` is incorrect.
+
+    **What to do:**
+
+    1. Open `config/credentials.ini` and verify the `username` and `password` values.
+    2. Confirm you can log in to Instagram with those credentials in a browser.
+    3. If the password contains special characters, make sure they have not been mangled by your editor.
+    4. If two-factor authentication is enabled on the account, Osintgram may not be able to complete login — use an account without 2FA.
+  </Accordion>
+
+  <Accordion title="No results found for a command">
+    Some commands return no results when the target account simply has no matching data:
+
+    - `addrs` — the target has not geotagged any posts.
+    - `fwersemail` / `fwingsemail` — none of the target's followers/followings have a public email on their profile.
+    - `stories` — the target currently has no active stories.
+    - `hashtags` — the target's captions contain no hashtags.
+
+    Osintgram prints `Sorry! No results found :-(` in these cases. This is expected behavior, not an error.
+  </Accordion>
+
+  <Accordion title="Windows readline / pyreadline issues">
+    Tab completion on Windows relies on `pyreadline`. If you see an import error related to readline on Windows, the package may not be installed.
+
+    **What to do:**
+
+    Ensure you have activated the virtual environment and installed all dependencies:
+
+    ```powershell
+    .\venv\Scripts\activate.ps1
+    pip install -r requirements.txt
+    ```
+
+    `requirements.txt` includes `pyreadline==2.1` with a `platform_system == "Windows"` marker, so it is only installed on Windows.
+  </Accordion>
+
+  <Accordion title="Virtual environment not active">
+    **Symptoms:** `ModuleNotFoundError` for packages like `instagram_private_api`, `prettytable`, or `geopy`, even though you have run `pip install -r requirements.txt` before.
+
+    The packages were most likely installed inside a virtual environment that is not currently active.
+
+    **What to do:**
+
+    <Tabs>
+      <Tab title="Linux / macOS / Git Bash">
+        ```bash
+        source venv/bin/activate
+        ```
+
+        Your prompt will change to show `(venv)` at the start.
+      </Tab>
+      <Tab title="Windows PowerShell">
+        ```powershell
+        .\venv\Scripts\activate.ps1
+        ```
+
+        If PowerShell blocks the script, run `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser` first.
+      </Tab>
+    </Tabs>
+
+    After activating, retry your command.
+  </Accordion>
+
+  <Accordion title="ModuleNotFoundError for a dependency">
+    If a module is missing even after activating the virtual environment, reinstall all dependencies:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+    If you have recently updated the repository, new dependencies may have been added since you last installed.
+  </Accordion>
+
+  <Accordion title="Updating to the latest stable version">
+    To update Osintgram to the latest stable release:
+
+    ```bash
+    git checkout master
+    git pull origin master
+    ```
+
+    After pulling, reactivate the virtual environment and reinstall dependencies in case `requirements.txt` has changed:
+
+    ```bash
+    source venv/bin/activate   # or .\venv\Scripts\activate.ps1 on Windows
+    pip install -r requirements.txt
+    ```
+  </Accordion>
+
+  <Accordion title="Using the development branch for latest fixes">
+    The `development` branch contains the most recent features and bug fixes that have not yet been merged to `master`.
+
+    ```bash
+    git checkout development
+    git pull origin development
+    ```
+
+    <Warning>
+    The development branch may contain incomplete features or breaking changes. Use `master` for stable operation.
+    </Warning>
+  </Accordion>
+</AccordionGroup>

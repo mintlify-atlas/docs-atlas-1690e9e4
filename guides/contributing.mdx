@@ -1,0 +1,137 @@
+---
+title: "Contributing to Osintgram: bugs, PRs, and dev setup"
+description: "Report bugs, propose features, or submit pull requests to Osintgram. Covers development setup, branch structure, Docker dev workflow, and the v2 beta branch."
+---
+
+Osintgram is an open-source project licensed under [GPL-3.0](https://github.com/Datalux/Osintgram/blob/master/LICENSE). Contributions of all kinds are welcome — bug reports, feature proposals, documentation improvements, and code changes.
+
+## Proposing features and reporting bugs
+
+Open an issue or pull request on the GitHub repository:
+
+[https://github.com/Datalux/Osintgram](https://github.com/Datalux/Osintgram)
+
+When opening an issue, include:
+
+- The command you ran and the full error output.
+- Your Python version (`python3 --version`).
+- Your operating system.
+- Whether you are using the `instagram_private_api` backend or HikerAPI.
+
+## Development setup
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/Datalux/Osintgram.git
+    cd Osintgram
+    ```
+  </Step>
+
+  <Step title="Switch to the development branch">
+    All active development happens on `development`. Base your changes on this branch, not `master`.
+
+    ```bash
+    git checkout development
+    ```
+  </Step>
+
+  <Step title="Create a virtual environment">
+    ```bash
+    python3 -m venv venv
+    ```
+  </Step>
+
+  <Step title="Activate the virtual environment">
+    <Tabs>
+      <Tab title="Linux / macOS / Git Bash">
+        ```bash
+        source venv/bin/activate
+        ```
+      </Tab>
+      <Tab title="Windows PowerShell">
+        ```powershell
+        .\venv\Scripts\activate.ps1
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    pip install -r requirements.txt
+    ```
+  </Step>
+
+  <Step title="Configure credentials">
+    ```bash
+    make setup
+    ```
+
+    This creates `config/credentials.ini` interactively. Alternatively, create the file manually — see the [credentials guide](/configuration/credentials) for the format.
+  </Step>
+</Steps>
+
+## Development workflow
+
+### Branch structure
+
+| Branch        | Purpose                                                       |
+| ------------- | ------------------------------------------------------------- |
+| `master`      | Stable releases — tagged versions only.                       |
+| `development` | Active development — latest features and bug fixes.           |
+| `v2`          | Beta v2 — faster rewrite with a new command execution interface. |
+
+Always create your feature branch from `development`:
+
+```bash
+git checkout development
+git pull origin development
+git checkout -b feature/my-feature
+```
+
+When your change is ready, open a pull request targeting the `development` branch.
+
+### Docker development environment
+
+The Makefile provides targets for a Docker-based development loop that does not invoke `main.py`, giving you an interactive shell inside the container:
+
+```bash
+# Set up credentials first
+make setup
+
+# Build and start the testing container (runs sleep infinity as entrypoint)
+make build-run-testing
+
+# When finished, tear down the container
+make cleanup-testing
+```
+
+This is useful for testing on a clean Linux environment or isolating dependency issues.
+
+## Trying Osintgram v2 (beta)
+
+The `v2` branch is a beta rewrite. It is faster and uses a new command execution interface. To try it:
+
+```bash
+git checkout v2
+pip install -r requirements.txt
+```
+
+<Warning>
+The `v2` branch is a beta. Some commands or behaviors may differ from the stable `master` branch.
+</Warning>
+
+## External dependency
+
+Osintgram's default backend uses the unofficial Instagram Private API library:
+
+[https://github.com/ping/instagram_private_api](https://github.com/ping/instagram_private_api)
+
+If you are adding a new command or modifying an existing one against the `Osintgram` class, refer to that library's documentation for available endpoints. Equivalent changes may also be needed in `src/hikercli.py` for the HikerAPI backend.
+
+## Contributors
+
+<a href="https://github.com/Datalux/Osintgram/graphs/contributors">
+  https://github.com/Datalux/Osintgram/graphs/contributors
+</a>

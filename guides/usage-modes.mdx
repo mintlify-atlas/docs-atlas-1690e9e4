@@ -1,0 +1,170 @@
+---
+title: "Interactive shell and single-command mode in Osintgram"
+description: "Osintgram supports an interactive REPL shell with tab-completion and a single-command mode for automation and scripting pipelines."
+---
+
+Osintgram can be driven in two distinct ways: an interactive REPL shell that keeps a session open so you can run as many commands as you like against a target, or a single-command mode that executes one command and exits immediately — making it easy to integrate into shell scripts and CI pipelines. Both modes support the same command set and the same output options.
+
+## Interactive mode
+
+Interactive mode is the default. Pass a target Instagram username and Osintgram logs in, sets the target, and drops you into a prompt where you can type any command.
+
+```bash
+python3 main.py <target_username>
+```
+
+After the ASCII banner and login banner you will see:
+
+```
+Run a command:
+```
+
+Type any command name and press **Enter**. Type `list` or `help` to print all available commands.
+
+### Tab completion
+
+Osintgram binds the **Tab** key to command-name completion. On Linux and macOS this is handled by `gnureadline`; on Windows it uses `pyreadline`. Start typing a command and press Tab to autocomplete or cycle through matching options.
+
+### Switching target mid-session
+
+Use the `target` command to pivot to a different Instagram account without restarting the tool. Osintgram will log a new target banner and create a new output subdirectory for that account.
+
+```
+Run a command: target
+Insert new target username: anothertarget
+```
+
+### Clearing the cache
+
+The `cache` command clears the tool's local session cache stored in `config/settings.json`.
+
+```
+Run a command: cache
+```
+
+### Enabling and disabling file and JSON output
+
+Output modes can be toggled at any point during a session by typing the control strings directly at the prompt:
+
+| Input    | Effect                                     |
+| -------- | ------------------------------------------ |
+| `FILE=y` | Enable writing results to `.txt` files     |
+| `FILE=n` | Disable writing results to `.txt` files    |
+| `JSON=y` | Enable exporting results to `.json` files  |
+| `JSON=n` | Disable exporting results to `.json` files |
+
+These settings persist for the remainder of the session or until changed again.
+
+---
+
+## Single-command mode
+
+Pass `--command` (or `-c`) with a command name to execute that command and exit. The interactive prompt and ASCII banner are suppressed.
+
+```bash
+python3 main.py <target_username> --command <command>
+```
+
+```bash
+# Short flag equivalent
+python3 main.py <target_username> -c <command>
+```
+
+The `-f` and `-j` flags enable file and JSON output respectively in this mode.
+
+```bash
+python3 main.py natgeo -c followers -f -j
+```
+
+<Note>
+Single-command mode skips the interactive prompt entirely. Commands that require interactive input during execution (such as `fwersemail`, which asks how many emails to retrieve) will use their default behavior when run non-interactively.
+</Note>
+
+---
+
+## HikerAPI mode
+
+If you have a HikerAPI token you can use the HikerAPI backend instead of the `instagram_private_api` library. Set the token in `config/credentials.ini` under the `hikerapi_token` key, or export it as an environment variable:
+
+```bash
+HIKERAPI_TOKEN=<your_token> python3 main.py <target_username> -c <command>
+```
+
+When a `HIKERAPI_TOKEN` is present, Osintgram automatically uses the `HikerCLI` class instead of `Osintgram`. The available commands and output formats are identical.
+
+<Tip>
+HikerAPI provides 100 free requests after registration. Use it as an alternative if Instagram's private API starts returning `challenge_required` or throttle errors on your account.
+</Tip>
+
+---
+
+## Comparison: interactive vs single-command
+
+<Tabs>
+  <Tab title="Interactive">
+    ```bash
+    # Start a session targeting a public account
+    python3 main.py natgeo
+
+    # Inside the shell:
+    # Run a command: FILE=y
+    # Run a command: JSON=y
+    # Run a command: followers
+    # Run a command: hashtags
+    # Run a command: likes
+    # Run a command: quit
+    ```
+  </Tab>
+  <Tab title="Single-command">
+    ```bash
+    # Run each command in a separate invocation, saving JSON each time
+    python3 main.py natgeo -c followers -j
+    python3 main.py natgeo -c hashtags  -j
+    python3 main.py natgeo -c likes     -j
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Scripting example
+
+Single-command mode composes cleanly into shell scripts. The example below collects several data points for a target and stores everything in the default `output/` directory.
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+TARGET="${1:?Usage: $0 <instagram_username>}"
+
+COMMANDS=(followers followings hashtags likes comments info)
+
+for cmd in "${COMMANDS[@]}"; do
+    echo "Running: $cmd"
+    python3 main.py "$TARGET" --command "$cmd" --json --file
+done
+
+echo "Done. Results saved to output/$TARGET/"
+```
+
+Save as `collect.sh`, make it executable with `chmod +x collect.sh`, then run:
+
+```bash
+./collect.sh natgeo
+```
+
+### Custom output directory
+
+Use `--output` (or `-o`) to write files to a directory other than `output/`:
+
+```bash
+python3 main.py natgeo -c photos -o /tmp/recon
+```
+
+### Clearing cookies before a run
+
+Pass `--cookies` (or `-C`) to clear the cached login session before starting:
+
+```bash
+python3 main.py natgeo -c info --cookies
+```

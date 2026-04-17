@@ -1,0 +1,202 @@
+---
+title: "Osintgram output formats: terminal, text, and JSON"
+description: "Osintgram outputs results to the terminal by default. Enable text file or JSON export to persist data from any command to the output directory."
+---
+
+By default, Osintgram prints results directly to the terminal using formatted tables. Two optional export modes — text files and JSON — let you persist the output of any command to disk so it can be processed by other tools or archived for later review. Both modes write to a per-target subdirectory inside the `output/` folder.
+
+## Terminal output
+
+All commands print results to stdout. Tabular data (followers, tagged users, addresses, and so on) is formatted with [PrettyTable](https://github.com/jazzband/prettytable), which renders aligned ASCII tables with column headers. Scalar results such as like counts are printed as plain text with color highlighting.
+
+No configuration is needed — terminal output is always on.
+
+---
+
+## Text file output
+
+When file output is enabled, every command writes its results to a `.txt` file inside `output/<target>/`. The file contains the same table that was printed to the terminal.
+
+**File name pattern:** `output/<target>/<target>_<command>.txt`
+
+For example, running `followers` against `natgeo` writes to `output/natgeo/natgeo_followers.txt`.
+
+<Tabs>
+  <Tab title="Interactive mode">
+    Type `FILE=y` at the prompt to enable, and `FILE=n` to disable:
+
+    ```
+    Run a command: FILE=y
+    Write to file: enabled
+
+    Run a command: followers
+    Run a command: FILE=n
+    Write to file: disabled
+    ```
+  </Tab>
+  <Tab title="CLI flag">
+    Pass `-f` or `--file` when starting Osintgram:
+
+    ```bash
+    python3 main.py natgeo --file
+    python3 main.py natgeo -f -c followers
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## JSON export
+
+When JSON export is enabled, every command writes a structured `.json` file to `output/<target>/` in addition to (or instead of) the terminal output.
+
+**File name pattern:** `output/<target>/<target>_<command>.json`
+
+<Tabs>
+  <Tab title="Interactive mode">
+    Type `JSON=y` at the prompt to enable, and `JSON=n` to disable:
+
+    ```
+    Run a command: JSON=y
+    Export to JSON: enabled
+
+    Run a command: likes
+    Run a command: JSON=n
+    Export to JSON: disabled
+    ```
+  </Tab>
+  <Tab title="CLI flag">
+    Pass `-j` or `--json` when starting Osintgram:
+
+    ```bash
+    python3 main.py natgeo --json
+    python3 main.py natgeo -j -c likes
+    ```
+  </Tab>
+</Tabs>
+
+Both flags can be combined:
+
+```bash
+python3 main.py natgeo -f -j -c followers
+```
+
+---
+
+## JSON structure by command
+
+The JSON schema varies per command. The following structures are written exactly as Osintgram produces them.
+
+### `followers`
+
+```json
+{
+  "followers": [
+    {
+      "id": 123456789,
+      "username": "someuser",
+      "full_name": "Some User"
+    }
+  ]
+}
+```
+
+### `likes`
+
+```json
+{
+  "like_counter": 48320,
+  "posts": 312,
+  "min": 42,
+  "max": 5801,
+  "avg": 154
+}
+```
+
+### `addrs`
+
+```json
+{
+  "address": [
+    {
+      "address": "Yosemite Valley, Mariposa County, California, United States",
+      "time": "2023-08-14 17:22:01"
+    }
+  ]
+}
+```
+
+### `comments`
+
+```json
+{
+  "comment_counter": 9871,
+  "posts": 312
+}
+```
+
+### `hashtags`
+
+```json
+{
+  "hashtags": [
+    "#photography",
+    "#nature",
+    "#wildlife"
+  ]
+}
+```
+
+### `info`
+
+```json
+{
+  "id": 787132,
+  "full_name": "National Geographic",
+  "biography": "...",
+  "edge_followed_by": 250000000,
+  "edge_follow": 160,
+  "is_business_account": true,
+  "is_verified": true,
+  "profile_pic_url_hd": "https://..."
+}
+```
+
+Optional fields (`email`, `connected_fb_page`, `whatsapp_number`, `city_name`, `address_street`, `contact_phone_number`) are included only when the target account has them set.
+
+---
+
+## Media downloads
+
+The `photos`, `propic`, and `stories` commands always save files to disk regardless of whether `FILE` or `JSON` mode is active. These commands download binary media (`.jpg` / `.mp4`) rather than structured data, so they have no text or JSON equivalent.
+
+| Command  | Output                                       |
+| -------- | -------------------------------------------- |
+| `photos` | `output/<target>/<target>_<post_id>.jpg`     |
+| `propic` | `output/<target>/<target>_propic.jpg`        |
+| `stories`| `output/<target>/<target>_<story_id>.jpg` or `.mp4` |
+
+---
+
+## Output directory structure
+
+After running several commands against a target, the `output/` directory looks like this:
+
+```
+output/
+└── natgeo/
+    ├── natgeo_followers.txt
+    ├── natgeo_followers.json
+    ├── natgeo_likes.txt
+    ├── natgeo_likes.json
+    ├── natgeo_hashtags.json
+    ├── natgeo_addrs.json
+    ├── natgeo_comments.json
+    ├── natgeo_info.json
+    ├── natgeo_propic.jpg
+    └── natgeo_2843719012345678901.jpg
+```
+
+<Note>
+The output directory is created automatically the first time a target is set. You can change the root directory from `output/` to a custom path using the `--output` / `-o` flag.
+</Note>

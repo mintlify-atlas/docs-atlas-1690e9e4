@@ -1,0 +1,94 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Osintgram",
+  "projectDescription": "An OSINT tool for Instagram that provides an interactive shell to collect, analyze, and run reconnaissance on any public Instagram account by nickname.",
+  "theme": "aspen",
+  "primaryColor": "#94cb04",
+  "lightColor": "#545454",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "docker"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/credentials",
+              "configuration/output",
+              "configuration/hikerapi"
+            ]
+          },
+          {
+            "group": "Command Reference",
+            "pages": [
+              "commands/overview",
+              "commands/profile-info",
+              "commands/social-graph",
+              "commands/content",
+              "commands/contact-info",
+              "commands/download"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/usage-modes",
+              "guides/output-formats",
+              "guides/troubleshooting",
+              "guides/contributing"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Interactive shell with tab-completion for all commands",
+    "Single-command mode for scripting and automation",
+    "Geolocation extraction from geotagged Instagram photos",
+    "Follower and following enumeration with contact info harvesting",
+    "Bulk photo and story downloads",
+    "JSON and text file output for all commands",
+    "Docker support for containerized deployment",
+    "HikerAPI backend as an alternative to direct Instagram private API"
+  ],
+  "publicApiSurface": [
+    "python3 main.py <target>",
+    "python3 main.py <target> --command <command>",
+    "python3 main.py <target> --json",
+    "python3 main.py <target> --file",
+    "python3 main.py <target> --output <dir>",
+    "python3 main.py <target> --cookies",
+    "HIKERAPI_TOKEN=<token> python3 main.py <target>",
+    "addrs",
+    "captions",
+    "commentdata",
+    "comments",
+    "followers",
+    "followings",
+    "fwersemail",
+    "fwingsemail",
+    "fwersnumber",
+    "fwingsnumber",
+    "hashtags",
+    "info",
+    "likes",
+    "mediatype",
+    "photodes",
+    "photos",
+    "propic",
+    "stories",
+    "tagged",
+    "wcommented",
+    "wtagged"
+  ]
+}

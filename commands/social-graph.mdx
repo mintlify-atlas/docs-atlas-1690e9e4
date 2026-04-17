@@ -1,0 +1,136 @@
+---
+title: "Social graph commands: followers, followings, and tags"
+description: "Use followers, followings, tagged, wcommented, and wtagged to map a target's social connections and engagement network on Instagram."
+---
+
+The social graph commands let you enumerate everyone connected to a target account — people who follow them, people they follow, people they tag in posts, people who comment on their content, and people who tag them. All five commands check whether the target profile is private before running; if the profile is private and you are not following the account, the command exits immediately.
+
+## `followers`
+
+Fetches the complete list of accounts that follow the target. The API returns results in paginated batches; the tool continues requesting pages until no further cursor is returned, then prints all collected records in a single table.
+
+### Output format
+
+```text
+Run a command: followers
+Searching for target followers...
+Catched 1200 followers
+
++-------------+-----------------+-----------------------+
+| ID          | Username        | Full Name             |
++-------------+-----------------+-----------------------+
+| 29384756102 | alex_photos     | Alex Reyes            |
+| 19283746501 | maria.design    | Maria Costa           |
+| 38475610293 | the_real_kai    | Kai Nakamura          |
++-------------+-----------------+-----------------------+
+```
+
+With `FILE=y`, the table is written to `output/<target>/<target>_followers.txt`. With `JSON=y`, each follower record includes `id`, `username`, and `full_name` and is written to `output/<target>/<target>_followers.json`.
+
+---
+
+## `followings`
+
+Fetches the complete list of accounts the target follows. The output format is identical to `followers`.
+
+### Output format
+
+```text
+Run a command: followings
+Searching for target followings...
+Catched 340 followings
+
++-------------+--------------------+--------------------+
+| ID          | Username           | Full Name          |
++-------------+--------------------+--------------------+
+| 45678901234 | travel_lens        | Priya Kapoor       |
+| 56789012345 | studio.noise       | Tom Eriksson       |
++-------------+--------------------+--------------------+
+```
+
+With `FILE=y`, the table is written to `output/<target>/<target>_followings.txt`. With `JSON=y`, each record is written to `output/<target>/<target>_followings.json`.
+
+---
+
+## `tagged`
+
+Scans the target's own posts and collects every user the target has tagged. Users who appear in multiple posts are counted, and the table is sorted by tag count in descending order so the most frequently tagged accounts appear first.
+
+The table columns are `Posts` (number of times tagged), `Full Name`, `Username`, and `ID`.
+
+### Output format
+
+```text
+Run a command: tagged
+Searching for users tagged by target...
+
+Woohoo! We found 8 (23) users
+
++-------+-------------------+------------------+-------------+
+| Posts | Full Name         | Username         | ID          |
++-------+-------------------+------------------+-------------+
+| 7     | Lena Brandt       | lena.b           | 11223344556 |
+| 6     | Sam Park          | sampark_official | 22334455667 |
+| 4     | Chris Walters     | chris_w          | 33445566778 |
++-------+-------------------+------------------+-------------+
+```
+
+The count in parentheses in the status line (e.g. `found 8 (23) users`) is the total number of tag occurrences across all posts; the first number is the count of distinct users.
+
+With `FILE=y`, output is saved to `output/<target>/<target>_tagged.txt`. With `JSON=y`, each record includes `post`, `full_name`, `username`, and `id` and is written to `output/<target>/<target>_tagged.json`.
+
+---
+
+## `wcommented`
+
+Fetches comments from every post in the target's feed, deduplicates commenters, and sorts them by total comment count. This reveals which accounts are most engaged with the target's content.
+
+The table columns are `Comments` (total comment count), `ID`, `Username`, and `Full Name`.
+
+<Note>
+This command fetches comments for every post individually. For accounts with many posts, it may take several minutes to complete.
+</Note>
+
+### Output format
+
+```text
+Run a command: wcommented
+Searching for users who commented...
+
++----------+-------------+------------------+------------------+
+| Comments | ID          | Username         | Full Name        |
++----------+-------------+------------------+------------------+
+| 34       | 44556677889 | superfan_2020    | Jordan Lee       |
+| 12       | 55667788990 | photo_critic     | Dana White       |
+| 7        | 66778899001 | bestie_forever   | Ariel Green      |
++----------+-------------+------------------+------------------+
+```
+
+With `FILE=y`, output is saved to `output/<target>/<target>_users_who_commented.txt`. With `JSON=y`, records are written to `output/<target>/<target>_users_who_commented.json`.
+
+---
+
+## `wtagged`
+
+Queries all public posts in which the target has been tagged by other users, then groups those posts by the tagger and sorts by how many times they tagged the target. This surfaces accounts that frequently mention or feature the target.
+
+The table columns are `Photos` (number of posts that tag the target), `ID`, `Username`, and `Full Name`.
+
+### Output format
+
+```text
+Run a command: wtagged
+Searching for users who tagged target...
+
+Woohoo! We found 142 photos
+
++--------+-------------+------------------+-----------------+
+| Photos | ID          | Username         | Full Name       |
++--------+-------------+------------------+-----------------+
+| 18     | 77889900112 | streetphotog_nyc | Marcus Bell     |
+| 9      | 88990011223 | travelwithme_co  | Nina Torres     |
+| 5      | 99001122334 | daily_clicks     | Omar Hassan     |
++--------+-------------+------------------+-----------------+
+```
+
+With `FILE=y`, output is saved to `output/<target>/<target>_users_who_tagged.txt`. With `JSON=y`, records are written to `output/<target>/<target>_users_who_tagged.json`.

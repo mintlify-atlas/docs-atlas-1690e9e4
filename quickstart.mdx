@@ -1,80 +1,214 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Osintgram quickstart: install, configure, and run it"
+description: "Install Osintgram on Linux, macOS, or Windows, configure your Instagram credentials, and run your first OSINT command in five steps."
 ---
 
-## Get started in three steps
+Osintgram runs on Linux, macOS, and Windows. The steps below walk you through cloning the repository, setting up a Python virtual environment, installing dependencies, configuring credentials, and running your first command.
 
-Get your documentation site running locally and make your first customization.
+<Note>
+  Use a **secondary Instagram account** for authentication, not your personal or primary account. Automated requests can trigger Instagram's bot-detection, which may temporarily lock the account you authenticate with.
+</Note>
 
-### Step 1: Set up your local environment
+## Installation
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Clone the repository">
+    Clone the Osintgram repository from GitHub:
 
-### Step 2: Deploy your changes
+    ```bash
+    git clone https://github.com/Datalux/Osintgram.git
+    ```
+  </Step>
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Step title="Navigate to the project directory">
+    ```bash
+    cd Osintgram
+    ```
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Create a virtual environment">
+    Create an isolated Python virtual environment for Osintgram's dependencies:
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    ```bash
+    python3 -m venv venv
+    ```
+  </Step>
 
-### Step 3: Go live
+  <Step title="Activate the virtual environment">
+    The activation command differs by operating system:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    <Tabs>
+      <Tab title="Linux / macOS / Git Bash">
+        ```bash
+        source venv/bin/activate
+        ```
+      </Tab>
+      <Tab title="Windows PowerShell">
+        ```powershell
+        .\venv\Scripts\activate.ps1
+        ```
+      </Tab>
+    </Tabs>
+
+    After activation, your shell prompt will be prefixed with `(venv)`.
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all required Python packages:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+    The following packages are installed:
+
+    | Package | Version | Purpose |
+    |---|---|---|
+    | `instagram-private-api` | 1.6.0 | Instagram API client |
+    | `hikerapi` | 1.7.1 | HikerAPI client (alternative auth) |
+    | `geopy` | ≥2.0.0 | Reverse geocoding for `addrs` |
+    | `prettytable` | 0.7.2 | Tabular output formatting |
+    | `requests-toolbelt` | 0.9.1 | HTTP utilities |
+    | `gnureadline` | ≥8.0.0 | Tab completion (Linux/macOS) |
+    | `pyreadline` | 2.1 | Tab completion (Windows) |
+  </Step>
+
+  <Step title="Configure credentials">
+    Open `config/credentials.ini` and enter your Instagram account credentials:
+
+    ```ini config/credentials.ini
+    [Credentials]
+    username = your_instagram_username
+    password = your_instagram_password
+    hikerapi_token =
+    ```
+
+    If you prefer to use a [HikerAPI](https://hikerapi.com) token instead of Instagram credentials directly, leave `username` and `password` blank and fill in `hikerapi_token`. The first 100 requests are free after registration.
+
+    ```ini config/credentials.ini
+    [Credentials]
+    username =
+    password =
+    hikerapi_token = your_hikerapi_token
+    ```
+
+    <Tip>
+      You can also pass the HikerAPI token at runtime via the environment variable `HIKERAPI_TOKEN` without modifying `credentials.ini`.
+    </Tip>
+  </Step>
+
+  <Step title="Run Osintgram">
+    Start Osintgram pointed at a target Instagram username:
+
+    ```bash
+    python3 main.py <target_username>
+    ```
+
+    Replace `<target_username>` with the Instagram handle of the public account you want to analyze.
+  </Step>
+</Steps>
+
+## Using the interactive shell
+
+When you run `python3 main.py <target_username>` without the `--command` flag, Osintgram opens an interactive shell. The shell prints a banner and waits for input:
+
+```text
+Run a command:
+```
+
+Type any command at the prompt and press Enter. For example, to retrieve profile information:
+
+```text
+Run a command: info
+```
+
+Useful shell-level controls:
+
+| Input | Effect |
+|---|---|
+| `list` or `help` | Print all available commands |
+| `FILE=y` | Enable saving output to `<target>_<command>.txt` |
+| `FILE=n` | Disable file output |
+| `JSON=y` | Enable exporting output to `<target>_<command>.json` |
+| `JSON=n` | Disable JSON export |
+| `target` | Set a new target username without restarting |
+| `quit` or `exit` | Exit the shell |
+| Tab | Autocomplete command names |
+
+## Available commands
+
+| Command | Description |
+|---|---|
+| `addrs` | Get all registered addresses from target's geotagged photos |
+| `captions` | Get target's photo captions |
+| `commentdata` | Get a list of all comments on the target's posts |
+| `comments` | Get total comment count across target's posts |
+| `followers` | Get target's followers |
+| `followings` | Get users followed by target |
+| `fwersemail` | Get email addresses of target's followers |
+| `fwingsemail` | Get email addresses of users followed by target |
+| `fwersnumber` | Get phone numbers of target's followers |
+| `fwingsnumber` | Get phone numbers of users followed by target |
+| `hashtags` | Get hashtags used by target |
+| `info` | Get target's profile information |
+| `likes` | Get total like count across target's posts |
+| `mediatype` | Get the media type (photo or video) of each post |
+| `photodes` | Get AI-generated descriptions of target's photos |
+| `photos` | Download target's photos to the output folder |
+| `propic` | Download target's profile picture |
+| `stories` | Download target's active stories |
+| `tagged` | Get list of users tagged by target in posts |
+| `wcommented` | Get list of users who commented on target's photos |
+| `wtagged` | Get list of users who tagged the target |
+| `cache` | Clear the local tool cache |
+
+## Single-command mode
+
+To run one command non-interactively and exit immediately, use the `--command` flag:
+
+```bash
+python3 main.py <target_username> --command info
+```
+
+This is useful for scripting or automation — Osintgram runs the specified command, prints the output, and exits without opening the interactive shell.
+
+## CLI flags
+
+All flags supported by `main.py`:
+
+| Flag | Short | Description |
+|---|---|---|
+| `--cookies` | `-C` | Clear previously cached cookies before running |
+| `--json` | `-j` | Save command output as a JSON file |
+| `--file` | `-f` | Save command output to a text file |
+| `--command <cmd>` | `-c` | Run in single-command mode and execute the specified command |
+| `--output <path>` | `-o` | Directory where downloaded photos are stored |
+
+### Example: save output to both text and JSON files
+
+```bash
+python3 main.py <target_username> --command followers --file --json
+```
+
+### Example: specify a custom output directory
+
+```bash
+python3 main.py <target_username> --output ./results --command photos
+```
+
+### Example: clear cookies and run a command
+
+```bash
+python3 main.py <target_username> --cookies --command info
+```
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Run with Docker" icon="docker" href="/docker">
+    Use Docker or Docker Compose for an isolated, portable setup.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/credentials">
+    Learn more about credential options, HikerAPI setup, and output configuration.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

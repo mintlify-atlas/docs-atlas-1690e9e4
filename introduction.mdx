@@ -1,0 +1,80 @@
+---
+title: "What is Osintgram? An Instagram OSINT tool explained"
+description: "Osintgram is a Python OSINT tool for Instagram reconnaissance. Collect profile data, social graphs, geolocation, and media from public accounts."
+---
+
+Osintgram is an open-source Python tool for running OSINT (Open Source Intelligence) reconnaissance on Instagram accounts. It provides an interactive shell with tab-completion and a single-command mode for scripting, letting you extract profile data, map social connections, harvest contact details, reverse-geocode photo locations, and bulk-download media — all from public Instagram profiles.
+
+<Warning>
+  Osintgram is intended for **educational purposes only**. The contributors assume no responsibility for how this tool is used. Do not use it to access accounts without proper authorization, and do not rely on it for unlawful surveillance or data collection. Always comply with Instagram's Terms of Service and applicable laws.
+</Warning>
+
+## What Osintgram can do
+
+Osintgram targets a public Instagram account by username and lets you run any of its built-in intelligence commands. Every command works against the currently set target and prints results to the terminal, with optional output to `.txt` or `.json` files.
+
+<CardGroup cols={2}>
+  <Card title="Profile intelligence" icon="circle-info" href="/commands/profile-info">
+    Retrieve full name, biography, follower counts, business category, email address, WhatsApp number, city, and HD profile picture URL with the `info` and `propic` commands.
+  </Card>
+  <Card title="Social graph" icon="users" href="/commands/social-graph">
+    Enumerate followers and followings with `followers` and `followings`. Identify who has tagged the target (`wtagged`) and who the target has tagged in posts (`tagged`).
+  </Card>
+  <Card title="Geolocation" icon="location-dot" href="/commands/profile-info">
+    Extract GPS coordinates embedded in geotagged posts and reverse-geocode them to street addresses using the `addrs` command.
+  </Card>
+  <Card title="Content analysis" icon="image" href="/commands/content">
+    Pull photo captions (`captions`), hashtag usage (`hashtags`), media types (`mediatype`), photo descriptions (`photodes`), comment counts (`comments`), and full comment data (`commentdata`).
+  </Card>
+  <Card title="Contact harvesting" icon="envelope" href="/commands/contact-info">
+    Collect public email addresses and phone numbers from a target's followers (`fwersemail`, `fwersnumber`) or followings (`fwingsemail`, `fwingsnumber`).
+  </Card>
+  <Card title="Media downloads" icon="download" href="/commands/download">
+    Bulk-download photos (`photos`), the profile picture (`propic`), and active stories (`stories`) to the local `output/` directory.
+  </Card>
+</CardGroup>
+
+## What Osintgram cannot do
+
+- **Access private profiles.** Osintgram only works on public accounts or accounts you already follow with the authenticated Instagram account. Tools that claim to bypass this are scams.
+- **Bypass Instagram rate limits or challenge checks.** If Instagram detects suspicious activity on the account used to authenticate, it will issue a `challenge_required` error. You must resolve this manually by following the link Instagram provides and completing the verification step (email code, SMS, etc.).
+- **Guarantee data completeness.** Instagram's private API may return partial results depending on account settings, post volume, or API changes.
+
+## How authentication works
+
+Osintgram authenticates to Instagram on your behalf using credentials stored in `config/credentials.ini`. Two authentication methods are supported:
+
+**Instagram credentials** — the default method. Add your Instagram username and password to `config/credentials.ini`:
+
+```ini config/credentials.ini
+[Credentials]
+username = your_instagram_username
+password = your_instagram_password
+hikerapi_token =
+```
+
+**HikerAPI token** — an alternative that routes requests through the [HikerAPI](https://hikerapi.com) service instead of Instagram's private API directly. Add your token to `config/credentials.ini` or pass it via the `HIKERAPI_TOKEN` environment variable. The first 100 requests are free after registration.
+
+```ini config/credentials.ini
+[Credentials]
+username =
+password =
+hikerapi_token = your_hikerapi_token
+```
+
+When `hikerapi_token` is present, Osintgram uses the HikerAPI client automatically. When it is absent, it falls back to direct Instagram authentication.
+
+<Note>
+  It is strongly advisable to use a **secondary Instagram account** rather than your personal or primary account when running Osintgram. Automated requests can trigger Instagram's bot-detection systems, which may temporarily lock the authenticating account.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install Osintgram locally and run your first command in five steps.
+  </Card>
+  <Card title="Run with Docker" icon="docker" href="/docker">
+    Deploy Osintgram in an isolated container using Docker or Docker Compose.
+  </Card>
+</CardGroup>

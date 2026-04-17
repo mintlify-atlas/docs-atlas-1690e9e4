@@ -1,0 +1,149 @@
+---
+title: "Harvest emails and phone numbers from follower lists"
+description: "The fwersemail, fwingsemail, fwersnumber, and fwingsnumber commands extract public contact information from a target's follower and following lists."
+---
+
+Four commands let you collect public email addresses and phone numbers from the accounts connected to a target. Each command first fetches the full follower or following list, then queries each account's profile for contact details that the user has chosen to make public. Only information that users have explicitly set as visible on their profiles is returned.
+
+<Warning>
+These commands make one API request per account in the list to look up contact details. For targets with thousands of followers or followings, this will trigger Instagram's rate limiting (`ClientThrottledError`). If you hit this error, wait several minutes before retrying. Running these commands against very large accounts is not recommended.
+</Warning>
+
+## `fwersemail`
+
+Fetches the complete follower list for the target, then queries each follower's profile for a public email address. Only followers who have set a public email are included in the results.
+
+### Interactive prompt
+
+After collecting the follower list, the command asks how many emails you want to retrieve:
+
+```text
+Run a command: fwersemail
+Searching for emails of target followers... this can take a few minutes
+Catched 1200 followers email
+
+Do you want to get all emails? y/n:
+```
+
+- Type `y` (or `yes`) to retrieve emails from all followers.
+- Type `n` (or `no`) to specify a count — you will be prompted for a number.
+- Press Enter to cancel and return to the prompt.
+
+### Output format
+
+```text
++-------------+-------------------+-------------------+---------------------------+
+| ID          | Username          | Full Name         | Email                     |
++-------------+-------------------+-------------------+---------------------------+
+| 11223344556 | studio.noise      | Tom Eriksson      | tom@studionoise.com       |
+| 22334455667 | photo_critic      | Dana White        | dana.white@example.org    |
++-------------+-------------------+-------------------+---------------------------+
+```
+
+With `FILE=y`, results are saved to `output/<target>/<target>_fwersemail.txt`. With `JSON=y`, records are written to `output/<target>/<target>_fwersemail.json` under the `followers_email` key.
+
+---
+
+## `fwingsemail`
+
+Fetches the complete list of accounts the target follows, then queries each account for a public email address. The interaction and output format are identical to `fwersemail`.
+
+### Interactive prompt
+
+```text
+Run a command: fwingsemail
+Searching for emails of users followed by target... this can take a few minutes
+
+Do you want to get all emails? y/n:
+```
+
+- Type `y` (or `yes`) to retrieve emails from all accounts in the following list.
+- Type `n` (or `no`) to specify a count.
+- Press Enter to cancel.
+
+### Output format
+
+```text
++-------------+------------------+------------------+------------------------------+
+| ID          | Username         | Full Name        | Email                        |
++-------------+------------------+------------------+------------------------------+
+| 33445566778 | travel_lens      | Priya Kapoor     | priya@travellens.io          |
++-------------+------------------+------------------+------------------------------+
+```
+
+With `FILE=y`, results are saved to `output/<target>/<target>_fwingsemail.txt`. With `JSON=y`, records are written to `output/<target>/<target>_fwingsemail.json` under the `followings_email` key.
+
+---
+
+## `fwersnumber`
+
+Fetches the complete follower list for the target, then queries each follower's profile for a public phone number (`contact_phone_number`). Only followers who have set a public phone number are included in the results.
+
+### Interactive prompt
+
+```text
+Run a command: fwersnumber
+Searching for phone numbers of users followers... this can take a few minutes
+
+Do you want to get all phone numbers? y/n:
+```
+
+- Type `y` (or `yes`) to retrieve phone numbers from all followers.
+- Type `n` (or `no`) to specify a count.
+- Press Enter to cancel.
+
+### Output format
+
+```text
++-------------+------------------+-----------------+------------------+
+| ID          | Username         | Full Name       | Phone            |
++-------------+------------------+-----------------+------------------+
+| 44556677889 | superfan_2020    | Jordan Lee      | +1 646 555 0192  |
++-------------+------------------+-----------------+------------------+
+```
+
+With `FILE=y`, results are saved to `output/<target>/<target>_fwersnumber.txt`. With `JSON=y`, records are written to `output/<target>/<target>_fwersnumber.json` under the `followers_phone_numbers` key.
+
+---
+
+## `fwingsnumber`
+
+Fetches the complete list of accounts the target follows, then queries each account for a public phone number. The interaction and output format are identical to `fwersnumber`.
+
+### Interactive prompt
+
+```text
+Run a command: fwingsnumber
+Searching for phone numbers of users followed by target... this can take a few minutes
+
+Do you want to get all phone numbers? y/n:
+```
+
+- Type `y` (or `yes`) to retrieve phone numbers from all accounts in the following list.
+- Type `n` (or `no`) to specify a count.
+- Press Enter to cancel.
+
+### Output format
+
+```text
++-------------+-----------------+-----------------+------------------+
+| ID          | Username        | Full Name       | Phone            |
++-------------+-----------------+-----------------+------------------+
+| 55667788990 | best_eats_milan | Giulia Ferrara  | +39 02 5550 1234 |
++-------------+-----------------+-----------------+------------------+
+```
+
+With `FILE=y`, results are saved to `output/<target>/<target>_fwingsnumber.txt`. With `JSON=y`, records are written to `output/<target>/<target>_fwingsnumber.json` under the `followings_phone_numbers` key.
+
+---
+
+## Performance considerations
+
+Because each command must look up every individual account in a potentially large list, runtimes scale linearly with the size of the follower or following list:
+
+- A target with 500 followers takes roughly 5–15 minutes depending on network speed and Instagram's response times.
+- A target with 10,000 followers may take several hours and is very likely to be interrupted by rate limiting.
+
+<Tip>
+Use the `n` option to retrieve a limited sample — for example, the first 100 followers with public contact info — rather than attempting to scan the entire list for large accounts.
+</Tip>

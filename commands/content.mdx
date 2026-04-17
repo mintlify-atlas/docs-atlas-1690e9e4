@@ -1,0 +1,155 @@
+---
+title: "Content analysis commands: captions, hashtags, likes"
+description: "Analyze a target's Instagram posts with captions, hashtags, comments, likes, media types, and photo descriptions using Osintgram content commands."
+---
+
+The content commands extract text, engagement metrics, and media metadata from a target's posts. All seven commands require a public profile (or one you follow) and page through the full post feed before reporting results.
+
+## `captions`
+
+Returns the caption text from every post that has one. Posts without a caption are silently skipped. Captions are printed one per block with a blank line between them.
+
+### Example output
+
+```text
+Run a command: captions
+Searching for target captions...
+Found 47
+
+Golden hour never gets old. 📷 #photography #nyc
+
+Sometimes you just have to slow down.
+Taken during last month's trip — full album in bio.
+
+New work dropping this Friday. Stay tuned.
+```
+
+With `FILE=y`, captions are written line by line to `output/<target>/<target>_captions.txt`. With `JSON=y`, they are stored as a list under the `captions` key.
+
+---
+
+## `comments`
+
+Returns the total number of comments across all of the target's posts, along with the post count. The value is read from the `comment_count` field of each post in the feed; individual comments are not fetched.
+
+### Example output
+
+```text
+Run a command: comments
+Searching for target total comments...
+
+8432 comments in 203 posts
+```
+
+With `FILE=y`, the result is written to `output/<target>/<target>_comments.txt`. With `JSON=y`, the fields `comment_counter` and `posts` are written to `output/<target>/<target>_comments.json`.
+
+---
+
+## `commentdata`
+
+Fetches the full text of every comment on every post and displays each one in a table alongside the post ID, commenter user ID, and commenter username. Unlike `comments`, which only reads the cached count, `commentdata` makes a separate API call for each post to retrieve the actual comment records.
+
+<Note>
+For accounts with many posts and high engagement, `commentdata` can take a long time to complete because it paginates comments for each post individually.
+</Note>
+
+### Output format
+
+```text
+Run a command: commentdata
+Retrieving all comments, this may take a moment...
+
++---------------------+-------------+-------------------+------------------------------------+
+| POST ID             | ID          | Username          | Comment                            |
++---------------------+-------------+-------------------+------------------------------------+
+| 3012345678901234567 | 11223344556 | alex_photos       | Amazing shot!                      |
+| 3012345678901234567 | 22334455667 | maria.design      | Love the composition here          |
+| 2987654321098765432 | 33445566778 | the_real_kai      | Where was this taken?              |
++---------------------+-------------+-------------------+------------------------------------+
+```
+
+With `FILE=y`, the table is written to `output/<target>/<target>_comment_data.txt`. With `JSON=y`, records are written to `output/<target>/<target>_comment_data.json` with fields `post_id`, `user_id`, `username`, and `comment`.
+
+---
+
+## `hashtags`
+
+Scans every post caption for words beginning with `#`, tallies how often each hashtag appears, and prints the list sorted from most to least frequent.
+
+### Example output
+
+```text
+Run a command: hashtags
+Searching for target hashtags...
+
+32. #photography
+28. #travel
+15. #nyc
+12. #streetphotography
+8. #blackandwhite
+5. #portrait
+```
+
+With `FILE=y`, the ranked list is written to `output/<target>/<target>_hashtags.txt`. With `JSON=y`, the hashtags are stored as an ordered list under the `hashtags` key in `output/<target>/<target>_hashtags.json`.
+
+---
+
+## `mediatype`
+
+Counts the number of photos (media type `1`) and videos (media type `2`) in the target's feed. Posts with any other media type are not counted in either total.
+
+### Example output
+
+```text
+Run a command: mediatype
+Searching for target captions...
+Checked 203 posts
+Woohoo! We found 178 photos and 25 video posted by target
+```
+
+With `FILE=y`, the counts are written to `output/<target>/<target>_mediatype.txt`. With `JSON=y`, the values are stored under `photos` and `videos` keys in `output/<target>/<target>_mediatype.json`.
+
+---
+
+## `photodes`
+
+Retrieves the `accessibility_caption` field that Instagram generates for each photo — an AI-produced sentence describing the visual content of the image. The captions are shown in a numbered table.
+
+<Note>
+`photodes` fetches data from the public Instagram web endpoint (`instagram.com/<target>/?__a=1`). This endpoint is separate from the private API and may return fewer results than the full feed. The `hikercli` backend (HikerAPI mode) reports that Instagram has disabled this functionality and returns no results.
+</Note>
+
+### Example output
+
+```text
+Run a command: photodes
+
+Woohoo! We found 12 descriptions
+
++-------+---------------------------------------------------------------+
+| Photo | Description                                                   |
++-------+---------------------------------------------------------------+
+| 1     | Photo by Jane Smith showing a person standing on a bridge     |
+| 2     | Image may contain: outdoor, sky, nature                       |
+| 3     | Photo by Jane Smith in New York, New York                     |
++-------+---------------------------------------------------------------+
+```
+
+With `FILE=y`, the table is written to `output/<target>/<target>_photodes.txt`. With `JSON=y`, descriptions are stored as objects in `output/<target>/<target>_descriptions.json`.
+
+---
+
+## `likes`
+
+Returns the total number of likes across all of the target's posts, plus the minimum, maximum, and average like count per post.
+
+### Example output
+
+```text
+Run a command: likes
+Searching for target total likes...
+
+214830 likes in 203 posts (min: 204, max: 9871, avg: 1058)
+```
+
+With `FILE=y`, the result is written to `output/<target>/<target>_likes.txt`. With `JSON=y`, the fields `like_counter`, `posts`, `min`, `max`, and `avg` are written to `output/<target>/<target>_likes.json`.

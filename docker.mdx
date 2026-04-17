@@ -1,0 +1,189 @@
+---
+title: "Run Osintgram in Docker and Docker Compose containers"
+description: "Deploy Osintgram in a Docker container or with Docker Compose. Use the Makefile for one-command setup, build, and run workflows on any platform."
+---
+
+Running Osintgram in Docker isolates it from your system Python environment and makes the setup reproducible across operating systems. You can use the Docker CLI directly, Docker Compose, or the provided `Makefile` shortcuts that wrap Docker Compose commands.
+
+## Prerequisites
+
+Before running Osintgram in Docker, make sure you have the following:
+
+1. **Docker** installed — [get Docker](https://docs.docker.com/get-docker/)
+2. **Docker Compose** installed — [get Docker Compose](https://docs.docker.com/compose/install/)
+3. **Credentials configured** — the container reads `config/credentials.ini` at build time. Configure this file before building the image, or run `make setup` to populate it interactively.
+
+<Warning>
+  The container will fail to start if `config/credentials.ini` is missing or contains blank credentials. Always configure credentials before building the image.
+</Warning>
+
+## Quickstart with the Makefile
+
+The `Makefile` in the repository root wraps Docker Compose into two commands for the most common workflow:
+
+<Steps>
+  <Step title="Configure credentials">
+    Run the setup target to create `config/credentials.ini` interactively. It prompts for your Instagram username and password:
+
+    ```bash
+    make setup
+    ```
+
+    The command writes the following file:
+
+    ```ini config/credentials.ini
+    [Credentials]
+    username = <your username>
+    password = <your password>
+    ```
+  </Step>
+
+  <Step title="Build and run">
+    Build the Docker image and start a container. The command prompts for a target Instagram username before running:
+
+    ```bash
+    make run
+    ```
+
+    `make run` performs these steps automatically:
+    - Stops and removes any existing `osintgram` containers
+    - Builds the image with `docker-compose build`
+    - Prompts for a target username
+    - Runs `docker-compose run --rm osintgram <target>`
+  </Step>
+</Steps>
+
+## Docker CLI
+
+If you prefer to use Docker directly without Docker Compose:
+
+### Build the image
+
+```bash
+docker build -t osintgram .
+```
+
+This uses the multi-stage `Dockerfile` to compile wheels on an Alpine build layer, then produce a slim final image running as a non-root `osintgram` user.
+
+### Run the container
+
+```bash
+docker run --rm -it -v "$PWD/output:/home/osintgram/output" osintgram <target>
+```
+
+Replace `<target>` with the Instagram username you want to analyze. Each flag in this command serves a specific purpose:
+
+| Flag | Type | Description |
+|---|---|---|
+| `-i` | Required | Keeps stdin open so you can interact with the Osintgram shell inside the container |
+| `-t` | Optional | Allocates a pseudo-TTY, enabling colored output |
+| `--rm` | Optional | Removes the container filesystem when it exits, preventing leftover containers from accumulating |
+| `-v "$PWD/output:/home/osintgram/output"` | Required | Mounts your local `./output/` directory into the container so that downloaded files (photos, stories, profile pictures) are saved to your host filesystem |
+
+## Docker Compose
+
+The `docker-compose.yml` file in the repository root defines the `osintgram` service and mounts `./output` automatically:
+
+```yaml docker-compose.yml
+version: '3.7'
+
+services:
+  osintgram:
+    container_name: osintgram
+    build: .
+    volumes:
+      - ./output:/home/osintgram/output
+```
+
+Run a target directly with Docker Compose:
+
+```bash
+docker-compose run osintgram <target>
+```
+
+## Docker vs Docker Compose
+
+<CodeGroup>
+
+```bash Docker
+# Build
+docker build -t osintgram .
+
+# Run
+docker run --rm -it -v "$PWD/output:/home/osintgram/output" osintgram <target>
+```
+
+```bash Docker Compose
+# Build and run
+docker-compose run osintgram <target>
+
+# Or use the Makefile shortcut
+make run
+```
+
+</CodeGroup>
+
+## Makefile reference
+
+The `Makefile` provides four targets for working with Docker Compose:
+
+| Target | Description |
+|---|---|
+| `make setup` | Prompts for Instagram credentials and writes `config/credentials.ini` |
+| `make run` | Stops existing containers, builds the image, prompts for a target username, and runs the container |
+| `make build-run-testing` | Builds the image and starts a detached container named `osintgram-testing` with `sleep infinity` as the entrypoint — useful for interactive development and debugging without invoking `main.py` |
+| `make cleanup-testing` | Stops and removes the `osintgram-testing` container created by `make build-run-testing` |
+
+### Development workflow with the Makefile
+
+<Steps>
+  <Step title="Configure credentials">
+    ```bash
+    make setup
+    ```
+  </Step>
+  <Step title="Start a development container">
+    ```bash
+    make build-run-testing
+    ```
+
+    This starts a detached container that stays alive indefinitely. You can then exec into it:
+
+    ```bash
+    docker exec -it osintgram-testing sh
+    ```
+  </Step>
+  <Step title="Run commands interactively inside the container">
+    From inside the container, invoke `main.py` directly:
+
+    ```bash
+    python main.py <target>
+    ```
+  </Step>
+  <Step title="Clean up">
+    When you are done, remove the testing container:
+
+    ```bash
+    make cleanup-testing
+    ```
+  </Step>
+</Steps>
+
+## Output files
+
+Downloaded media and exported data are saved to `./output/` on the host, mapped to `/home/osintgram/output` inside the container. This directory is created automatically when the container runs.
+
+<Note>
+  If you use `--file` or `--json` flags (or `FILE=y` / `JSON=y` in the interactive shell), output text and JSON files are also written to this directory and will persist after the container exits.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install and run Osintgram locally without Docker.
+  </Card>
+  <Card title="Configuration" icon="gear" href="/configuration/credentials">
+    Learn about credential options, HikerAPI setup, and output configuration.
+  </Card>
+</CardGroup>
